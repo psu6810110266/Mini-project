@@ -1,12 +1,13 @@
 import React from 'react';
 
-// ประกาศตรงนี้เลย ไม่ต้อง import
+// 1. เพิ่ม description ใน Interface (ใส่เครื่องหมาย ? แปลว่ามีหรือไม่มีก็ได้)
 interface TourPackage {
   id: number;
   title: string;
   duration: string;
   price?: number;
   imageUrl: string;
+  description?: string; // <--- เพิ่มบรรทัดนี้
 }
 
 interface TourCardProps {
@@ -22,6 +23,14 @@ const TourCard: React.FC<TourCardProps> = ({ tour }) => {
       <div className="card-content">
         <h3 className="card-title">{tour.title}</h3>
         <p className="card-duration">⏳ {tour.duration}</p>
+
+        {/* 2. เพิ่มส่วนแสดงคำอธิบาย (ถ้ามีข้อมูลให้แสดง) */}
+        {tour.description && (
+          <p className="card-description">
+            {tour.description}
+          </p>
+        )}
+
         <div className="card-footer">
           <span className="card-price">
             {tour.price ? `฿${tour.price.toLocaleString()}` : 'สอบถามราคา'}
