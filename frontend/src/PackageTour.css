@@ -1,0 +1,141 @@
+/* PackageTour.css */
+
+/* คอนเทนเนอร์หลักของหน้า */
+.tour-page-container {
+  background-color: #faf5ff; /* สีพื้นหลังม่วงอ่อน */
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.tour-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto; /* จัดกึ่งกลาง */
+}
+
+/* ส่วนหัว */
+.tour-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tour-title {
+  font-size: 2.5rem;
+  color: #6b21a8; /* สีม่วงเข้ม */
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.tour-title-underline {
+  width: 100px;
+  height: 4px;
+  background-color: #c084fc; /* สีม่วงกลาง */
+  margin: 0 auto;
+  border-radius: 2px;
+}
+
+/* --- ส่วนสำคัญ: ตาราง Grid --- */
+.tour-grid {
+  display: grid;
+  /* บรรทัดนี้คือหัวใจสำคัญ: repeat(4, 1fr) แปลว่า บังคับให้มี 4 คอลัมน์ */
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 24px; /* ระยะห่างระหว่างการ์ด */
+}
+
+/* ถ้าหน้าจอเล็กมาก (มือถือ) ให้เหลือ 1 คอลัมน์ */
+@media (max-width: 768px) {
+  .tour-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+/* -------------------------- */
+
+
+/* การ์ดทัวร์ */
+.tour-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e9d5ff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ให้การ์ดสูงเท่ากันหมด */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tour-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+}
+
+.card-image-container {
+  height: 180px;
+  width: 100%;
+  background-color: #eee;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* เอารูปมาวางให้เต็มกรอบโดยไม่เบี้ยว */
+}
+
+.card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* ขยายพื้นที่ให้เต็มส่วนที่เหลือ */
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #4c1d95;
+  margin: 0 0 8px 0;
+}
+
+.card-duration {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* ส่วนล่างสุดของการ์ด (ราคาและปุ่ม) */
+.card-footer {
+  margin-top: auto; /* ดันลงไปล่างสุด */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-price {
+  font-weight: bold;
+  color: #7e22ce;
+  font-size: 1.1rem;
+}
+
+.card-button {
+  padding: 8px 16px;
+  background-color: #9333ea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.card-button:hover {
+  background-color: #7e22ce;
+}
+
+/* การ์ดที่ยังไม่มา (Empty State) */
+.empty-card {
+  border: 2px dashed #d8b4fe;
+  border-radius: 12px;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #c084fc;
+  font-size: 1.2rem;
+}
