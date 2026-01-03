@@ -1,24 +1,29 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
 import { ToursModule } from './tours/tours.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { User } from './users/entities/user.entity';
+import { Tour } from './tours/entities/tour.entity';
+import { Booking } from './bookings/entities/booking.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(), // โหลดค่า Config
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: 'localhost',      // ถ้า error ให้ลองเปลี่ยนเป็น '127.0.0.1'
       port: 5432,
-      username: 'admin',      // ต้องตรงกับ docker-compose.yml
-      password: 'password123', // ต้องตรงกับ docker-compose.yml
+      username: 'admin',      // ตาม docker-compose
+      password: 'password123',// ตาม docker-compose
       database: 'tour_booking',
-      autoLoadEntities: true, // โหลด Entity อัตโนมัติ
-      synchronize: true,      // true = แก้โค้ดแล้วแก้ DB ให้ (ใช้เฉพาะตอน Dev)
-    }), ToursModule,
+      entities: [User, Tour, Booking], // ระบุ Entity ให้ชัดเจน
+      synchronize: true,      // Auto create tables
+    }),
+    UsersModule,
+    ToursModule,
+    BookingsModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}
