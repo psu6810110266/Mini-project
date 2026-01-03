@@ -23,7 +23,6 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
-<<<<<<< HEAD
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^11.0.5",
@@ -35,13 +34,6 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-=======
-    "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/typeorm": "^11.0.0",
-    "bcrypt": "^6.0.0",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
->>>>>>> b6c8556880f36248b6ee7b21f7498f0d20718c9a
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -58,10 +50,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
-<<<<<<< HEAD
     "@types/passport-local": "^1.0.38",
-=======
->>>>>>> b6c8556880f36248b6ee7b21f7498f0d20718c9a
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
