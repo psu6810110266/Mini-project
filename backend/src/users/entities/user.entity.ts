@@ -1,6 +1,7 @@
 // src/users/entities/user.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Booking } from '../../bookings/entities/booking.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 
 export enum UserRole {
   ADMIN = 'ADMIN',
@@ -33,4 +34,7 @@ export class User {
 
   @OneToMany(() => Booking, (booking) => booking.user)
   bookings: Booking[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.user)
+  favorites: Favorite[];
 }
