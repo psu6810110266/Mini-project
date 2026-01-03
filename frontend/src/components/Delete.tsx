@@ -32,6 +32,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({ isOpen, onConfirm, onCancel }
               padding: '10px 20px', cursor: 'pointer', borderRadius: '8px',
               border: '1px solid #ccc', backgroundColor: 'white'
             }}>
+            ยกเลิก
           </button>
           <button 
             onClick={onConfirm} 
