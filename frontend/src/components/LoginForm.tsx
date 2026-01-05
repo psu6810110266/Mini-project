@@ -19,7 +19,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   return (
     <div className="login-bg">
       <div className="trego-modal-box" style={{ maxWidth: '350px', textAlign: 'center' }}>
-        <h1 className="trego-logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>🐒 Tour</h1>
+        <h1 className="trego-logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>🐒 Monkey Tour</h1>
         <p style={{ color: '#666', marginBottom: '20px' }}>Welcome back! Please login.</p>
         
         <form onSubmit={handleSubmit}>

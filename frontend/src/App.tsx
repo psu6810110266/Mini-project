@@ -7,7 +7,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'user'>('user');
 
-  const handleLogin = (role: string) => {
+  const handleLogin = (username: string,role: string) => {
     setUserRole(role as 'admin' | 'user');
     setIsLoggedIn(true);
   };

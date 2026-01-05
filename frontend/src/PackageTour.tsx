@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import TourCard, { type TourPackage } from './components/TourCard'; 
 import AddTourModal from './components/AddTourModal';
 import DeleteModal from './components/Delete';
+import TourDetails from './components/TourDetails';
 
 interface PackageTourProps { userRole: 'admin' | 'user'; onLogout: () => void; }
 
@@ -11,12 +12,15 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
   const [tours, setTours] = useState<TourPackage[]>([
     { id: 1, title: '7 Islands Krabi', duration: '1 Day', price: 1500, imageUrl: 'https://www.krabiteerapongtour.com/uploads/package/pictures/pic-618950471758.jpg', description: 'Visit the magnificent 7 Islands Krabi.' },
     { id: 2, title: 'Samui', duration: '2 Days 2 Nights', price: 8500, imageUrl: 'https://blog.bangkokair.com/wp-content/uploads/2023/11/%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%AA%E0%B8%A1%E0%B8%B8%E0%B8%A2.png', description: 'Relaxing on beautiful beaches.' },
-    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', price: 5900, imageUrl: 'https://teawkrabi.com/wp-content/uploads/Phi-Phi-Isaland.jpg', description: 'Experience Northern culture.' }
+    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', price: 5900, imageUrl: 'https://teawkrabi.com/wp-content/uploads/Phi-Phi-Isaland.jpg', description: 'Experience Phi Phi Island.' }
   ]);
 
   const [isAddOpen, setAddOpen] = useState(false);
   const [isDelOpen, setDelOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
+  
+  // 2. สร้าง State เพื่อเก็บทัวร์ที่กำลังดูรายละเอียด (ถ้าเป็น null คือดูหน้ารวม)
+  const [viewDetailsTour, setViewDetailsTour] = useState<TourPackage | null>(null);
 
   const handleSave = (data: any) => {
     if (selectedTour) setTours(prev => prev.map(t => t.id === selectedTour.id ? { ...data, id: t.id } : t));
@@ -29,6 +33,18 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
     setDelOpen(false);
   };
 
+  // 3. Logic สลับหน้า: ถ้ามีข้อมูลใน viewDetailsTour ให้แสดงหน้า TourDetails
+  if (viewDetailsTour) {
+    return (
+      <div>
+        <Navbar userRole={userRole} onLogout={onLogout} />
+        {/* ส่งฟังก์ชัน onBack เพื่อเคลียร์ค่า state กลับไปหน้าหลัก */}
+        <TourDetails tour={viewDetailsTour} onBack={() => setViewDetailsTour(null)} />
+      </div>
+    );
+  }
+
+  // ถ้าไม่มี viewDetailsTour ก็แสดงหน้า List ตามปกติ
   return (
     <div>
       <Navbar userRole={userRole} onLogout={onLogout} />
@@ -47,6 +63,8 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
               key={tour.id} tour={tour} 
               onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
               onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
+              // 4. ส่งฟังก์ชัน setViewDetailsTour เข้าไป
+              onDetails={() => setViewDetailsTour(tour)}
             />
           ))}
         </div>
