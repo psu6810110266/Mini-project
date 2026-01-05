@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
+// --- แก้ไขบรรทัดนี้: เติม { } ครอบ AppController ---
+import { AppController } from './app.controller'; 
+// ----------------------------------------------
 import { AppService } from './app.service';
 
 @Module({
@@ -22,7 +24,7 @@ import { AppService } from './app.service';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: true, // แนะนำให้เปิดเฉพาะตอนพัฒนา (Development)
       }),
       inject: [ConfigService],
     }),

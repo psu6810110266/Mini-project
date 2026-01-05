@@ -14,7 +14,7 @@ export class UsersController {
 
   // --- เพิ่มบรรทัดนี้เพื่อล็อคประตู ---
   @UseGuards(AuthGuard('jwt')) 
-  @Get()
+  @Get()  
   findAll(@Request() req) { // ใส่ @Request() req เพื่อดูว่าใครเป็นคนเรียก
     console.log('User ที่เรียก API นี้คือ:', req.user); // ลอง log ดูเล่นๆ
     return this.usersService.findAll();

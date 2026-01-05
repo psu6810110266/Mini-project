@@ -5,7 +5,11 @@ import TourCard, { type TourPackage } from './components/TourCard';
 import AddTourModal from './components/AddTourModal';
 import DeleteModal from './components/Delete';
 
-interface PackageTourProps { userRole: 'admin' | 'user'; onLogout: () => void; }
+// ปรับ Interface ให้รองรับค่า ADMIN / USER ที่มาจาก Backend
+interface PackageTourProps { 
+  userRole: string; 
+  onLogout: () => void; 
+}
 
 export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
   const [tours, setTours] = useState<TourPackage[]>([
@@ -17,6 +21,9 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
   const [isAddOpen, setAddOpen] = useState(false);
   const [isDelOpen, setDelOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
+
+  // ตรวจสอบว่าเป็น Admin หรือไม่ (เช็คทั้งตัวพิมพ์เล็กและใหญ่เพื่อความชัวร์)
+  const isAdmin = userRole?.toUpperCase() === 'ADMIN';
 
   const handleSave = (data: any) => {
     if (selectedTour) setTours(prev => prev.map(t => t.id === selectedTour.id ? { ...data, id: t.id } : t));
@@ -36,17 +43,23 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
       <div className="trego-container" style={{ padding: '60px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>Popular Packages</h2>
-          {userRole === 'admin' && (
-            <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>+ Add Package</button>
+          
+          {/* --- Authorization: เฉพาะ Admin เท่านั้นที่เห็นปุ่ม Add --- */}
+          {isAdmin && (
+            <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>
+              + Add Package
+            </button>
           )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
           {tours.map(tour => (
             <TourCard 
-              key={tour.id} tour={tour} 
-              onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
-              onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
+              key={tour.id} 
+              tour={tour} 
+              // --- Authorization: ส่ง function Edit/Delete ให้เฉพาะ Admin เท่านั้น ---
+              onEdit={isAdmin ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
+              onDelete={isAdmin ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
             />
           ))}
         </div>
