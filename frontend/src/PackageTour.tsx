@@ -4,60 +4,99 @@ import Hero from './components/Hero';
 import TourCard, { type TourPackage } from './components/TourCard'; 
 import AddTourModal from './components/AddTourModal';
 import DeleteModal from './components/Delete';
+import TourDetails from './components/TourDetails';
 
-// ปรับ Interface ให้รองรับค่า ADMIN / USER ที่มาจาก Backend
 interface PackageTourProps { 
   userRole: string; 
   onLogout: () => void; 
 }
 
 export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
+  // 1. Data State (รายการทัวร์)
   const [tours, setTours] = useState<TourPackage[]>([
     { id: 1, title: '7 Islands Krabi', duration: '1 Day', price: 1500, imageUrl: 'https://www.krabiteerapongtour.com/uploads/package/pictures/pic-618950471758.jpg', description: 'Visit the magnificent 7 Islands Krabi.' },
     { id: 2, title: 'Samui', duration: '2 Days 2 Nights', price: 8500, imageUrl: 'https://blog.bangkokair.com/wp-content/uploads/2023/11/%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%AA%E0%B8%A1%E0%B8%B8%E0%B8%A2.png', description: 'Relaxing on beautiful beaches.' },
-    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', price: 5900, imageUrl: 'https://teawkrabi.com/wp-content/uploads/Phi-Phi-Isaland.jpg', description: 'Experience Northern culture.' }
+    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', price: 5900, imageUrl: 'https://teawkrabi.com/wp-content/uploads/Phi-Phi-Isaland.jpg', description: 'Experience Phi Phi Island.' }
   ]);
 
+  // 2. UI State (เปิด/ปิด Modal และการเลือกข้อมูล)
   const [isAddOpen, setAddOpen] = useState(false);
   const [isDelOpen, setDelOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
+  const [viewDetailsTour, setViewDetailsTour] = useState<TourPackage | null>(null);
 
-  // ตรวจสอบว่าเป็น Admin หรือไม่ (เช็คทั้งตัวพิมพ์เล็กและใหญ่เพื่อความชัวร์)
+  // 3. Authorization Logic (รองรับ Role จาก Backend)
   const isAdmin = userRole?.toUpperCase() === 'ADMIN';
 
+  // 4. CRUD Functions
   const handleSave = (data: any) => {
-    if (selectedTour) setTours(prev => prev.map(t => t.id === selectedTour.id ? { ...data, id: t.id } : t));
-    else setTours(prev => [...prev, { ...data, id: Date.now() }]);
+    if (selectedTour) {
+      // แก้ไขข้อมูลเดิม
+      setTours(prev => prev.map(t => t.id === selectedTour.id ? { ...data, id: t.id } : t));
+    } else {
+      // เพิ่มข้อมูลใหม่
+      setTours(prev => [...prev, { ...data, id: Date.now() }]);
+    }
     setAddOpen(false);
   };
 
   const handleDelete = () => {
-    if (selectedTour) setTours(prev => prev.filter(t => t.id !== selectedTour.id));
+    if (selectedTour) {
+      setTours(prev => prev.filter(t => t.id !== selectedTour.id));
+    }
     setDelOpen(false);
   };
 
+  // --- 5. Conditional Rendering: หน้ารายละเอียดทัวร์ ---
+  if (viewDetailsTour) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar userRole={userRole} onLogout={onLogout} />
+        <TourDetails 
+          tour={viewDetailsTour} 
+          onBack={() => setViewDetailsTour(null)} 
+        />
+      </div>
+    );
+  }
+
+  // --- 6. Main Render: หน้าจอบอร์ดรายการทัวร์ ---
   return (
-    <div>
+    <div className="min-h-screen bg-white">
       <Navbar userRole={userRole} onLogout={onLogout} />
       <Hero />
+      
       <div className="trego-container" style={{ padding: '60px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>Popular Packages</h2>
+          <div>
+            <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0, fontWeight: 700 }}>Popular Packages</h2>
+            <p style={{ color: '#666', marginTop: '8px' }}>Explore our handpicked travel experiences</p>
+          </div>
           
-          {/* --- Authorization: เฉพาะ Admin เท่านั้นที่เห็นปุ่ม Add --- */}
+          {/* Authorization: แสดงปุ่ม Add เฉพาะ Admin */}
           {isAdmin && (
-            <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>
-              + Add Package
+            <button 
+              className="trego-btn trego-btn-primary" 
+              onClick={() => { setSelectedTour(null); setAddOpen(true); }}
+            >
+              + Add New Package
             </button>
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+        {/* รายการ Card ทัวร์ */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+          gap: '30px' 
+        }}>
           {tours.map(tour => (
             <TourCard 
               key={tour.id} 
               tour={tour} 
-              // --- Authorization: ส่ง function Edit/Delete ให้เฉพาะ Admin เท่านั้น ---
+              // ผูกฟังก์ชันเข้ากับหน้า Details
+              onView={() => setViewDetailsTour(tour)}
+              // ผูกฟังก์ชันจัดการ (เฉพาะ Admin)
               onEdit={isAdmin ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
               onDelete={isAdmin ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
             />
@@ -65,8 +104,22 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
         </div>
       </div>
 
-      <AddTourModal isOpen={isAddOpen} onClose={() => setAddOpen(false)} onSave={handleSave} initialData={selectedTour} />
-      <DeleteModal isOpen={isDelOpen} onConfirm={handleDelete} onCancel={() => setDelOpen(false)} />
+      {/* Modals สำหรับ Admin */}
+      {isAdmin && (
+        <>
+          <AddTourModal 
+            isOpen={isAddOpen} 
+            onClose={() => setAddOpen(false)} 
+            onSave={handleSave} 
+            initialData={selectedTour} 
+          />
+          <DeleteModal 
+            isOpen={isDelOpen} 
+            onConfirm={handleDelete} 
+            onCancel={() => setDelOpen(false)} 
+          />
+        </>
+      )}
     </div>
   );
 }

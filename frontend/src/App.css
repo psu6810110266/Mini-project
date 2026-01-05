@@ -175,3 +175,27 @@ body {
 .login-bg { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
 
 @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ================= FAVORITE BUTTON ================= */
+.btn-favorite {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* เวลาเอาเมาส์ชี้ ให้มีพื้นหลังสีเทาจางๆ */
+.btn-favorite:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.1); /* ขยายใหญ่ขึ้นนิดนึง */
+}
+
+/* เวลากดคลิก ให้ยุบลงไปหน่อย */
+.btn-favorite:active {
+  transform: scale(0.9);
+}

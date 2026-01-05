@@ -9,7 +9,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [userRole, setUserRole] = useState<'admin' | 'user'>('user');
 
-  const handleLogin = (username: string, role: string) => {
+  const handleLogin = (role: string) => {
     setUserRole(role as 'admin' | 'user');
     setIsLoggedIn(true);
   };
