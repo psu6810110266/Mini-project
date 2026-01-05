@@ -1,150 +1,59 @@
-import { useState, useEffect } from 'react';
-import './PackageTour.css';
-import TourCard from './components/TourCard';
+import { useState } from 'react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import TourCard, { type TourPackage } from './components/TourCard'; 
 import AddTourModal from './components/AddTourModal';
-import DeleteModal from './components/delete'; // หรือ DeleteModal ถ้าเปลี่ยนชื่อไฟล์แล้ว
+import DeleteModal from './components/Delete';
 
-interface TourPackage {
-  id: number;
-  title: string;
-  duration: string;
-  price?: number;
-  imageUrl: string;
-  description?: string;
-}
+interface PackageTourProps { userRole: 'admin' | 'user'; onLogout: () => void; }
 
-const initialTourData: TourPackage[] = [
-  { id: 1, title: 'เกาะสมุย', duration: '3 วัน 2 คืน', price: 5900, imageUrl: 'https://placehold.co/400x300/purple/white?text=Samui', description: 'เที่ยวเกาะสวรรค์อ่าวไทย...' },
-  { id: 2, title: 'ทัวร์ 7 เกาะ', duration: '1 วัน', price: 1500, imageUrl: 'https://placehold.co/400x300/purple/white?text=7+Islands', description: 'ล่องเรือเที่ยว 7 เกาะ...' },
-];
+export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
+  const [tours, setTours] = useState<TourPackage[]>([
+    { id: 1, title: '7 Islands Krabi', duration: '1 Day', price: 1500, imageUrl: 'https://www.krabiteerapongtour.com/uploads/package/pictures/pic-618950471758.jpg', description: 'Visit the magnificent 7 Islands Krabi.' },
+    { id: 2, title: 'Samui', duration: '2 Days 2 Nights', price: 8500, imageUrl: 'https://blog.bangkokair.com/wp-content/uploads/2023/11/%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%AA%E0%B8%A1%E0%B8%B8%E0%B8%A2.png', description: 'Relaxing on beautiful beaches.' },
+    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', price: 5900, imageUrl: 'https://teawkrabi.com/wp-content/uploads/Phi-Phi-Isaland.jpg', description: 'Experience Northern culture.' }
+  ]);
 
-interface PackageTourPageProps {
-  userRole: 'admin' | 'user';
-}
+  const [isAddOpen, setAddOpen] = useState(false);
+  const [isDelOpen, setDelOpen] = useState(false);
+  const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
 
-export default function PackageTourPage({ userRole }: PackageTourPageProps) {
-  const [tours, setTours] = useState<TourPackage[]>(() => {
-    const savedTours = localStorage.getItem('myTours');
-    return savedTours ? JSON.parse(savedTours) : initialTourData;
-  });
-
-  // State สำหรับ Modal (ใช้ร่วมกันทั้ง Add และ Edit)
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // 3. เพิ่ม State เก็บ "ทัวร์ที่กำลังแก้ไข" (ถ้าเป็น null แปลว่าเพิ่มใหม่)
-  const [editingTour, setEditingTour] = useState<TourPackage | null>(null);
-
-  // State สำหรับ Modal ลบทัวร์
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [tourIdToDelete, setTourIdToDelete] = useState<number | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem('myTours', JSON.stringify(tours));
-  }, [tours]);
-
-  // ฟังก์ชันเปิด Modal เพื่อ "เพิ่ม"
-  const handleAddClick = () => {
-    setEditingTour(null); // เคลียร์ข้อมูลเก่าออก
-    setIsModalOpen(true);
+  const handleSave = (data: any) => {
+    if (selectedTour) setTours(prev => prev.map(t => t.id === selectedTour.id ? { ...data, id: t.id } : t));
+    else setTours(prev => [...prev, { ...data, id: Date.now() }]);
+    setAddOpen(false);
   };
 
-  // 4. ฟังก์ชันเปิด Modal เพื่อ "แก้ไข"
-  const handleEditClick = (tour: TourPackage) => {
-    setEditingTour(tour); // ใส่ข้อมูลที่จะแก้เข้าไป
-    setIsModalOpen(true);
-  };
-
-  // 5. ปรับ Logic การบันทึก ให้รองรับทั้ง Add และ Edit
-  const handleSaveTour = (tourData: any) => {
-    if (editingTour) {
-      // --- กรณีแก้ไข (Update) ---
-      setTours(tours.map(t => 
-        t.id === editingTour.id ? { ...t, ...tourData } : t
-      ));
-    } else {
-      // --- กรณีเพิ่มใหม่ (Create) ---
-      setTours([...tours, { id: Date.now(), ...tourData }]);
-    }
-    setIsModalOpen(false);
-    setEditingTour(null); // Reset
-  };
-  
-  const handleReset = () => {
-    localStorage.removeItem('myTours');
-    setTours(initialTourData);
-    window.location.reload();
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setTourIdToDelete(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (tourIdToDelete !== null) {
-      const updatedTours = tours.filter(tour => tour.id !== tourIdToDelete);
-      setTours(updatedTours);
-      setIsDeleteModalOpen(false);
-      setTourIdToDelete(null);
-    }
+  const handleDelete = () => {
+    if (selectedTour) setTours(prev => prev.filter(t => t.id !== selectedTour.id));
+    setDelOpen(false);
   };
 
   return (
-    <div className="tour-page-container">
-      <div className="tour-content-wrapper">
-        
-        <header className="tour-header-row">
-          <div className="tour-title-group">
-            <h1 className="tour-title">Package Tour</h1>
-            <div className="tour-title-underline"></div>
-          </div>
-          
-          <div style={{display: 'flex', gap: '10px'}}>
-             {userRole === 'admin' && (
-               <button onClick={handleReset} style={{cursor: 'pointer', background: 'transparent', border: '1px solid #ccc', padding: '8px 16px', borderRadius: '20px', color: '#666'}}>
-                  รีเซ็ต
-               </button>
-             )}
+    <div>
+      <Navbar userRole={userRole} onLogout={onLogout} />
+      <Hero />
+      <div className="trego-container" style={{ padding: '60px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>Popular Packages</h2>
+          {userRole === 'admin' && (
+            <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>+ Add Package</button>
+          )}
+        </div>
 
-             {userRole === 'admin' && (
-                // เปลี่ยนไปใช้ handleAddClick แทนการ set state ตรงๆ
-               <button className="btn-add-tour" onClick={handleAddClick}>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  เพิ่มทัวร์ใหม่
-               </button>
-             )}
-          </div>
-        </header>
-
-        <div className="tour-grid">
-          {tours.map((tour) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+          {tours.map(tour => (
             <TourCard 
-              key={tour.id} 
-              tour={tour}
-              // ส่งทั้ง Edit และ Delete ถ้าเป็น Admin
-              onDelete={userRole === 'admin' ? () => handleDeleteClick(tour.id) : undefined}
-              onEdit={userRole === 'admin' ? () => handleEditClick(tour) : undefined}
+              key={tour.id} tour={tour} 
+              onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
+              onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
             />
           ))}
         </div>
-
-        {/* Modal เพิ่ม/แก้ไข ทัวร์ */}
-        <AddTourModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          onSave={handleSaveTour} // เปลี่ยนชื่อฟังก์ชันเป็น handleSaveTour
-          initialData={editingTour} // ส่งข้อมูลที่จะแก้ (ถ้ามี)
-        />
-
-        <DeleteModal
-          isOpen={isDeleteModalOpen}
-          onCancel={() => setIsDeleteModalOpen(false)}
-          onConfirm={confirmDelete}
-        />
-
       </div>
+
+      <AddTourModal isOpen={isAddOpen} onClose={() => setAddOpen(false)} onSave={handleSave} initialData={selectedTour} />
+      <DeleteModal isOpen={isDelOpen} onConfirm={handleDelete} onCancel={() => setDelOpen(false)} />
     </div>
   );
 }
