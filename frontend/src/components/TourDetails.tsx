@@ -1,30 +1,79 @@
+import { useEffect } from 'react';
 import { type TourPackage } from './TourCard';
 
 interface TourDetailsProps {
   tour: TourPackage;
-  onBack: () => void;
+  onClose: () => void; // เปลี่ยนชื่อจาก onBack เป็น onClose ให้สื่อความหมาย
 }
 
-export default function TourDetails({ tour, onBack }: TourDetailsProps) {
+export default function TourDetails({ tour, onClose }: TourDetailsProps) {
+  
+  // (Optional) ป้องกันหน้าหลังเลื่อนตอนเปิด Popup
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
   return (
-    <div className="trego-container" style={{ padding: '40px 20px' }}>
-      
-      {/* ปุ่มย้อนกลับ */}
-      <button 
-        onClick={onBack}
-        style={{ 
-          background: 'none', border: 'none', cursor: 'pointer', 
-          color: '#666', display: 'flex', alignItems: 'center', gap: '5px',
-          marginBottom: '20px', fontSize: '16px', fontWeight: 'bold'
+    // 1. Overlay พื้นหลังสีดำจางๆ (เต็มจอ)
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.6)', // สีดำโปร่งแสง
+      zIndex: 9999, // อยู่บนสุด
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px',
+      backdropFilter: 'blur(5px)' // เบลอฉากหลังนิดๆ ให้ดูหรู
+    }} onClick={onClose}> {/* กดที่ว่างเพื่อปิด */}
+
+      {/* 2. กล่องเนื้อหา (Popup) */}
+      <div 
+        onClick={(e) => e.stopPropagation()} // กดในกล่องแล้วไม่ปิด
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          maxWidth: '900px',
+          width: '100%',
+          maxHeight: '90vh', // สูงไม่เกิน 90% ของจอ
+          overflowY: 'auto', // ถ้าเนื้อหายาวให้เลื่อนได้
+          position: 'relative',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          animation: 'fadeInUp 0.3s ease-out'
         }}
       >
-        ← Back to Packages
-      </button>
+        {/* 3. ปุ่มปิดกากบาท (X) มุมซ้ายบน */}
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px', // มุมซ้ายบน
+            zIndex: 10,
+            background: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            fontSize: '20px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            color: '#333',
+            transition: 'transform 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          ✕
+        </button>
 
-      {/* ส่วนแสดงผลรายละเอียด */}
-      <div style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+        {/* --- เนื้อหาข้างใน (เหมือนเดิม) --- */}
         
-        {/* รูปภาพ Cover ใหญ่ */}
+        {/* รูปภาพ Cover */}
         <div style={{ height: '400px', overflow: 'hidden' }}>
           <img src={tour.imageUrl} alt={tour.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
@@ -49,14 +98,12 @@ export default function TourDetails({ tour, onBack }: TourDetailsProps) {
           <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#4b5563' }}>
             {tour.description}
             <br /><br />
-            {/* จำลอง text เพิ่มเติม */}
             Experience the ultimate journey with our premium tour package. 
             Enjoy local cuisines, visit historical landmarks, and relax in top-rated accommodations.
-            Our guides are professional and ready to serve you.
           </p>
 
-          <div style={{ marginTop: '40px' }}>
-            <button className="trego-btn trego-btn-primary" style={{ padding: '12px 30px', fontSize: '16px' }}>
+          <div style={{ marginTop: '40px', textAlign: 'center' }}>
+            <button className="trego-btn trego-btn-primary" style={{ padding: '15px 40px', fontSize: '18px', width: '100%' }}>
               Book This Tour Now
             </button>
           </div>
