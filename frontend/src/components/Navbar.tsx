@@ -4,9 +4,19 @@ interface NavbarProps {
   userRole?: string;
   onLogout?: () => void;
   onOpenBookings?: () => void;
+  onGoHome?: () => void;
+  // ✅ 1. เพิ่ม onOpenSettings เพื่อรับคำสั่งเปิดหน้าตั้งค่า
+  onOpenSettings?: () => void;
 }
 
-export default function Navbar({ userRole, onLogout, onOpenBookings }: NavbarProps) {
+export default function Navbar({ 
+  userRole, 
+  onLogout, 
+  onOpenBookings, 
+  onGoHome,
+  onOpenSettings // ✅ รับค่ามา
+}: NavbarProps) {
+  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
@@ -17,40 +27,32 @@ export default function Navbar({ userRole, onLogout, onOpenBookings }: NavbarPro
       padding: '15px 30px', 
       background: 'white', 
       boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-      position: 'relative' // 1. สำคัญ: ต้องใส่ relative ที่แม่
+      position: 'relative'
     }}>
       
       {/* --- ส่วนซ้าย: LOGO --- */}
-      <a href="/" className="trego-logo" style={{ 
-        textDecoration: 'none', 
-        fontSize: '24px', 
-        fontWeight: 'bold', 
-        color: '#0f1d45',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        zIndex: 2 // ให้ Logo อยู่ชั้นบน
-      }}>
+      <a 
+        href="/" 
+        // ✅ 2. ใส่ onClick ให้ Logo กลับหน้า Home
+        onClick={(e) => { e.preventDefault(); onGoHome?.(); }} 
+        className="trego-logo" 
+        style={{ 
+          textDecoration: 'none', 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          color: '#0f1d45',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          zIndex: 2 
+        }}
+      >
         🐒 Monkey Tour
       </a>
 
-      {/* --- ส่วนกลาง: LINKS (บังคับให้อยู่ตรงกลางเป๊ะ) --- */}
-      <div className="trego-nav-links" style={{
-        position: 'absolute',       // 2. ลอยตัวออกมา
-        left: '50%',                // 3. เริ่มที่กึ่งกลาง
-        transform: 'translateX(-50%)', // 4. ขยับกลับมาครึ่งนึงเพื่อให้กลางพอดี
-        display: 'flex',
-        gap: '30px',
-        fontWeight: '500'
-      }}>
-        <a href="#" onClick={(e) => e.preventDefault()} style={linkStyle}>Home</a>
-        <a href="#" style={linkStyle}>Contact</a>
-      </div>
-
-      {/* --- ส่วนขวา: ACTIONS (ปุ่มต่างๆ) --- */}
+      {/* --- ส่วนขวา: ACTIONS --- */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', zIndex: 2 }}>
         
-        {/* ปุ่ม My Bookings */}
         <button 
           onClick={onOpenBookings}
           style={{
@@ -92,12 +94,24 @@ export default function Navbar({ userRole, onLogout, onOpenBookings }: NavbarPro
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)', borderRadius: '10px', width: '180px',
               overflow: 'hidden', zIndex: 100, animation: 'fadeIn 0.2s ease-out'
             }}>
-               {/* ... (Code Dropdown เดิม) ... */}
                <div style={{ padding: '12px 15px', borderBottom: '1px solid #f3f4f6', fontSize: '14px', color: '#666' }}>
-                  Signed in as <strong style={{ color: '#0f1d45' }}>{userRole}</strong>
+                 Signed in as <strong style={{ color: '#0f1d45' }}>{userRole}</strong>
                </div>
                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <a href="#" style={menuItemStyle}>Settings</a>
+                  
+                  {/* ✅ 3. แก้ไขปุ่ม Settings ให้กดได้จริง */}
+                  <a 
+                    href="#" 
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      setIsDropdownOpen(false); // ปิด dropdown
+                      onOpenSettings?.();       // เรียกฟังก์ชันเปิด Settings
+                    }} 
+                    style={menuItemStyle}
+                  >
+                    Settings
+                  </a>
+
                   <div style={{ borderTop: '1px solid #f3f4f6', marginTop: '5px' }}>
                     <button onClick={onLogout} style={{ ...menuItemStyle, width: '100%', textAlign: 'left', border: 'none', background: 'transparent', color: '#ef4444', fontWeight: 'bold' }}>
                       Logout
@@ -111,14 +125,6 @@ export default function Navbar({ userRole, onLogout, onOpenBookings }: NavbarPro
     </nav>
   );
 }
-
-// สไตล์เสริม (จะได้ไม่ต้องแก้ CSS)
-const linkStyle: React.CSSProperties = {
-  textDecoration: 'none',
-  color: '#374151',
-  fontSize: '15px',
-  transition: 'color 0.2s',
-};
 
 const menuItemStyle: React.CSSProperties = { 
   padding: '10px 15px', textDecoration: 'none', color: '#374151', fontSize: '14px', display: 'block', cursor: 'pointer' 
