@@ -8,6 +8,7 @@ import AddTourModal from './components/AddTourModal';
 import DeleteModal from './components/Delete'; 
 import TourDetails from './components/TourDetails';
 import Settings from './components/Settings';
+import Footer from './components/Footer';
 
 export default function PackageTour() {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export default function PackageTour() {
             
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>
-                {viewMode === 'all' && 'Popular Packages'}
+                {viewMode === 'all' && 'Monkey Packages'}
                 {viewMode === 'favorites' && 'My Favorites'}
                 {viewMode === 'bookings' && 'My Bookings'}
               </h2>
@@ -222,6 +223,7 @@ export default function PackageTour() {
           onClose={() => setViewDetailsTour(null)} 
         />
       )}
+      <Footer/>
     </div>
   );
 }
