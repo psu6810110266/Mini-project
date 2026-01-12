@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
-  onLogin: (username: string, role: string) => void;
-  onShowRegister: () => void;
+  onShowRegister?: () => void;
 }
 
-export default function LoginForm({ onLogin, onShowRegister }: LoginFormProps) {
+export default function LoginForm({ onShowRegister }: LoginFormProps) {
+  const navigate = useNavigate();
+  
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // ❌ ลบ state rememberMe ออกแล้ว
+  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,18 +21,25 @@ export default function LoginForm({ onLogin, onShowRegister }: LoginFormProps) {
     setLoading(true);
 
     try {
-      // ยิงไปที่ Path /api/user/login
       const response = await fetch('http://localhost:3000/api/user/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // ❌ ไม่ส่ง rememberMe ไปแล้ว
         body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // ส่ง username และ role (ADMIN/USER) กลับไปที่ Appหลัก
-        onLogin(data.username, data.role);
+        // ✅ เปลี่ยนมาใช้ localStorage อย่างเดียว (จำการล็อกอินไว้เสมอ)
+        const storage = localStorage;
+
+        storage.setItem('app_token', data.access_token); 
+        storage.setItem('app_username', data.username);
+        storage.setItem('app_role', data.role);
+
+        navigate('/home'); 
+
       } else {
         setError(data.message || 'Login failed');
       }
@@ -67,11 +78,15 @@ export default function LoginForm({ onLogin, onShowRegister }: LoginFormProps) {
               required
             />
           </div>
+
+          {/* ❌ ลบส่วน Checkbox UI ออกไปแล้ว */}
+
           {error && <p style={{ color: 'var(--trego-red)', fontSize: '12px' }}>{error}</p>}
+          
           <button 
             type="submit" 
             className="trego-btn trego-btn-primary" 
-            style={{ width: '100%', marginTop: '10px' }}
+            style={{ width: '100%', marginTop: '20px' }} // เพิ่ม margin นิดหน่อยให้สวยงาม
             disabled={loading}
           >
             {loading ? 'Checking...' : 'Login'}

@@ -1,19 +1,30 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
+
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import TourCard, { type TourPackage } from './components/TourCard'; 
 import AddTourModal from './components/AddTourModal';
 import DeleteModal from './components/Delete'; 
 import TourDetails from './components/TourDetails';
-import Settings from './components/Settings'; // ✅ 1. Import Settings
+import Settings from './components/Settings';
 
-interface PackageTourProps { 
-  userRole: 'admin' | 'user'; 
-  onLogout: () => void; 
-}
+export default function PackageTour() {
+  const navigate = useNavigate();
 
-export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
-  
+  // ✅ แก้ไขตรงนี้: ดึงค่ามา -> แปลงเป็นตัวเล็กทันที -> เช็คว่าเป็น admin หรือไม่
+  const rawRole = localStorage.getItem('app_role') || sessionStorage.getItem('app_role') || 'user';
+  const userRole = rawRole.toLowerCase() === 'admin' ? 'admin' : 'user';
+
+  // 🛠️ Debug: เปิด Console (F12) ดูว่ามันปริ้นค่าอะไรออกมา
+  console.log("Debug Role:", userRole, "(Original:", rawRole, ")");
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/login'); 
+  };
+
   // --- 1. Data State ---
   const [tours, setTours] = useState<any[]>([
     { id: 1, title: '7 Islands Krabi', duration: '1 Day', days: 1, nights: 0, price: 1500, imageUrl: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80', description: 'Visit the magnificent 7 Islands Krabi.' },
@@ -28,7 +39,6 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
   const [viewDetailsTour, setViewDetailsTour] = useState<TourPackage | null>(null); 
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]); 
   
-  // ✅ 2. เพิ่ม 'settings' ใน Type ของ State
   const [viewMode, setViewMode] = useState<'all' | 'favorites' | 'bookings' | 'settings'>('all');
 
   // --- 3. Logic Functions ---
@@ -79,10 +89,9 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
     <div>
       <Navbar 
         userRole={userRole} 
-        onLogout={onLogout} 
+        onLogout={handleLogout} 
         onOpenBookings={() => setViewMode('bookings')}
         onGoHome={() => setViewMode('all')} 
-        // ✅ 3. ส่งคำสั่งเปิด Settings ไปให้ Navbar
         onOpenSettings={() => setViewMode('settings')}
       />
 
@@ -130,6 +139,7 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
               )}
             </div>
 
+            {/* ✅ ใช้ userRole ที่แปลงเป็นตัวเล็กแล้วเช็คเงื่อนไข */}
             {userRole === 'admin' && viewMode !== 'bookings' && (
               <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>
                 + Add Package
@@ -158,7 +168,7 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
           </div>
 
         ) : viewMode === 'settings' ? (
-           // ⚫ VIEW: Settings (เพิ่มใหม่)
+           // ⚫ VIEW: Settings
            <Settings />
            
         ) : (
@@ -173,6 +183,7 @@ export default function PackageTour({ userRole, onLogout }: PackageTourProps) {
                     isFavorite={favoriteIds.includes(tour.id)}
                     onToggleFavorite={() => toggleFavorite(tour.id)}
                     onDetails={() => setViewDetailsTour(tour)} 
+                    // ✅ ส่ง Action เฉพาะ Admin
                     onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
                     onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
                   />
