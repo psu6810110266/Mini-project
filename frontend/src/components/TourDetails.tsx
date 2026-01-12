@@ -98,7 +98,7 @@ export default function TourDetails({ tour, onClose }: TourDetailsProps) {
           <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#4b5563' }}>
             {tour.description}
             <br /><br />
-            Experience the ultimate journey with our premium tour package. 
+            Experience the ultimate journey with our tour package. 
             Enjoy local cuisines, visit historical landmarks, and relax in top-rated accommodations.
           </p>
 

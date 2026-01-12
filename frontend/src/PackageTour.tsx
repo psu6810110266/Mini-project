@@ -169,9 +169,7 @@ export default function PackageTour() {
           </div>
 
         ) : viewMode === 'settings' ? (
-           // ⚫ VIEW: Settings
-           <Settings />
-           
+        <Settings onBack={() => setViewMode('all')} />  // 👈 ส่งฟังก์ชันกลับหน้าหลักตรงนี้
         ) : (
           // 🔵 VIEW: All Tours / Favorites
           <>

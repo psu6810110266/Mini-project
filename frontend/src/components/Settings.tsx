@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-export default function Settings() {
-  // จำลอง State สำหรับข้อมูล User
+interface SettingsProps {
+  onBack?: () => void;
+}
+
+export default function Settings({ onBack }: SettingsProps) {
+  
   const [profile, setProfile] = useState({
     firstName: 'Monkey',
     lastName: 'Admin',
@@ -16,56 +20,76 @@ export default function Settings() {
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleToggle = () => {
-    setProfile(prev => ({ ...prev, notifications: !prev.notifications }));
-  };
-
   const handleSave = () => {
     alert('✅ Settings saved successfully!');
-    // ตรงนี้ถ้ามี backend ก็จะยิง API update user
   };
 
   return (
     <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', animation: 'fadeIn 0.5s' }}>
       
-      <h2 style={{ color: '#0f1d45', fontSize: '28px', marginBottom: '30px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
-        ⚙️ Account Settings
-      </h2>
+      {/* ✅ ส่วนหัว: ปรับให้เหมือนรูป My Bookings */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', // ดันข้อความไปซ้าย ปุ่มไปขวา
+        alignItems: 'center', 
+        marginBottom: '30px', 
+        borderBottom: '1px solid #e2e8f0', // เส้นบางลงตามสไตล์โมเดิร์น
+        paddingBottom: '20px' 
+      }}>
+        
+        {/* หัวข้อทางซ้าย */}
+        <h2 style={{ color: '#0f1d45', fontSize: '32px', fontWeight: 'bold', margin: 0 }}>
+          Account Settings
+        </h2>
 
-      {/* --- Section 1: Profile --- */}
+        {/* ปุ่ม Back ทางขวา (ทรงแคปซูล) */}
+        {onBack && (
+          <button 
+            onClick={onBack}
+            style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#f8fafc', 
+              border: '1px solid #cbd5e1', 
+              borderRadius: '50px', // ทรงแคปซูล
+              padding: '8px 20px', 
+              fontSize: '14px', 
+              fontWeight: '600',
+              color: '#0f1d45', 
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = '#e2e8f0';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = '#f8fafc';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span>←</span> Back to Home
+          </button>
+        )}
+      </div>
+
+      {/* --- Section 1: Profile (เหมือนเดิม) --- */}
       <div className="settings-card" style={cardStyle}>
         <h3 style={headerStyle}>Profile Information</h3>
         
         <div style={gridStyle}>
           <div>
             <label style={labelStyle}>First Name</label>
-            <input 
-              type="text" 
-              name="firstName" 
-              value={profile.firstName} 
-              onChange={handleChange} 
-              style={inputStyle} 
-            />
+            <input type="text" name="firstName" value={profile.firstName} onChange={handleChange} style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>Last Name</label>
-            <input 
-              type="text" 
-              name="lastName" 
-              value={profile.lastName} 
-              onChange={handleChange} 
-              style={inputStyle} 
-            />
+            <input type="text" name="lastName" value={profile.lastName} onChange={handleChange} style={inputStyle} />
           </div>
           <div style={{ gridColumn: 'span 2' }}>
             <label style={labelStyle}>Email Address</label>
-            <input 
-              type="email" 
-              name="email" 
-              value={profile.email} 
-              onChange={handleChange} 
-              style={inputStyle} 
-            />
+            <input type="email" name="email" value={profile.email} onChange={handleChange} style={inputStyle} />
           </div>
           <div>
              <label style={labelStyle}>Phone Number</label>
@@ -74,53 +98,20 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* --- Section 2: Preferences --- */}
-      <div className="settings-card" style={cardStyle}>
-        <h3 style={headerStyle}>Preferences</h3>
-        
-        <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>Language</label>
-          <select name="language" value={profile.language} onChange={handleChange} style={inputStyle}>
-            <option value="English">English</option>
-            <option value="Thai">Thai (ภาษาไทย)</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 0', borderTop: '1px solid #f1f5f9' }}>
-          <div>
-            <div style={{ fontWeight: 'bold', color: '#334155' }}>Email Notifications</div>
-            <div style={{ fontSize: '13px', color: '#64748b' }}>Receive updates about your bookings and promotions.</div>
-          </div>
-          
-          <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '24px' }}>
-            <input 
-              type="checkbox" 
-              checked={profile.notifications} 
-              onChange={handleToggle}
-              style={{ opacity: 0, width: 0, height: 0 }} 
-            />
-            <span style={{ 
-              position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
-              backgroundColor: profile.notifications ? '#0f1d45' : '#ccc', 
-              borderRadius: '34px', transition: '.4s' 
-            }}>
-              <span style={{ 
-                position: 'absolute', content: '""', height: '16px', width: '16px', left: '4px', bottom: '4px', 
-                backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
-                transform: profile.notifications ? 'translateX(26px)' : 'translateX(0)'
-              }}></span>
-            </span>
-          </label>
-        </div>
-      </div>
-
       {/* --- Action Buttons --- */}
-      <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
-        <button onClick={handleSave} className="trego-btn trego-btn-primary" style={{ padding: '12px 30px', fontSize: '16px' }}>
-          Save Changes
-        </button>
-        <button className="trego-btn" style={{ border: '1px solid #cbd5e1', color: '#64748b' }}>
+      <div style={{ display: 'flex', gap: '15px', marginTop: '30px', justifyContent: 'flex-end' }}>
+        <button onClick={onBack} className="trego-btn" style={{ 
+          padding: '12px 30px', fontSize: '16px', border: '1px solid #cbd5e1', 
+          color: '#64748b', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' 
+        }}>
           Cancel
+        </button>
+        <button onClick={handleSave} className="trego-btn trego-btn-primary" style={{ 
+          padding: '12px 30px', fontSize: '16px', background: '#0f1d45', 
+          color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+          boxShadow: '0 4px 12px rgba(15, 29, 69, 0.2)'
+        }}>
+          Save Changes
         </button>
       </div>
 
@@ -128,13 +119,14 @@ export default function Settings() {
   );
 }
 
-// --- Styles ---
+// --- Styles (คงเดิม) ---
 const cardStyle: React.CSSProperties = {
-  background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', marginBottom: '25px'
+  background: 'white', padding: '30px', borderRadius: '16px', 
+  boxShadow: '0 4px 20px rgba(0,0,0,0.05)', marginBottom: '25px', border: '1px solid #f1f5f9'
 };
 
 const headerStyle: React.CSSProperties = {
-  marginTop: 0, marginBottom: '20px', color: '#0f1d45', fontSize: '18px'
+  marginTop: 0, marginBottom: '20px', color: '#0f1d45', fontSize: '18px', fontWeight: 'bold'
 };
 
 const gridStyle: React.CSSProperties = {
@@ -146,6 +138,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 15px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '15px', color: '#0f1d45',
-  boxSizing: 'border-box' // สำคัญเพื่อให้ padding ไม่ดัน width เกิน
+  width: '100%', padding: '12px 15px', borderRadius: '8px', 
+  border: '1px solid #cbd5e1', fontSize: '15px', color: '#0f1d45',
+  boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s'
 };
