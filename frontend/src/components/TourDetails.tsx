@@ -101,12 +101,6 @@ export default function TourDetails({ tour, onClose }: TourDetailsProps) {
             Experience the ultimate journey with our tour package. 
             Enjoy local cuisines, visit historical landmarks, and relax in top-rated accommodations.
           </p>
-
-          <div style={{ marginTop: '40px', textAlign: 'center' }}>
-            <button className="trego-btn trego-btn-primary" style={{ padding: '15px 40px', fontSize: '18px', width: '100%' }}>
-              Book This Tour Now
-            </button>
-          </div>
         </div>
       </div>
     </div>
