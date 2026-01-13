@@ -12,11 +12,12 @@ import { JwtStrategy } from './jwt.strategy'; // 1. Import มา
     PassportModule,
     JwtModule.register({
       secret: 'SECRET_KEY_NAJA',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AuthController],
   // 2. ใส่ JwtStrategy เข้าไปใน providers
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -1,14 +1,14 @@
-// src/users/entities/user.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Booking } from '../../bookings/entities/booking.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 
+// 🚩 กำหนดประเภท Role ให้เป็นระเบียบ
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
+  USER = 'user',
+  ADMIN = 'admin',
 }
 
-@Entity('users')
+@Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -17,8 +17,9 @@ export class User {
   username: string;
 
   @Column()
-  password: string; 
+  password: string;
 
+  // 🚩 ปรับปรุง: ใช้ Enum แทน string ปกติ เพื่อป้องกันการกรอกค่าผิด
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -26,15 +27,11 @@ export class User {
   })
   role: UserRole;
 
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
+  // ความสัมพันธ์กับการจองทัวร์
   @OneToMany(() => Booking, (booking) => booking.user)
   bookings: Booking[];
 
+  // ✨ ความสัมพันธ์กับรายการโปรดที่เพิ่มเข้ามาใหม่
   @OneToMany(() => Favorite, (favorite) => favorite.user)
   favorites: Favorite[];
 }

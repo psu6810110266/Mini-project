@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd'; 
+import { jwtDecode } from "jwt-decode"; // 🚩 นำเข้าตัวถอดรหัส Token
 
 interface LoginFormProps {
   onShowRegister?: () => void;
+}
+
+// กำหนด Interface สำหรับข้อมูลใน Token
+interface JwtPayload {
+  sub: number;
+  username: string;
+  role: string;
+  iat: number;
+  exp: number;
 }
 
 export default function LoginForm({ onShowRegister }: LoginFormProps) {
@@ -10,8 +21,6 @@ export default function LoginForm({ onShowRegister }: LoginFormProps) {
   
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  // ❌ ลบ state rememberMe ออกแล้ว
-  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,27 +30,42 @@ export default function LoginForm({ onShowRegister }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/user/login', {
+      // 1. ส่งข้อมูลไป Login ที่ Backend
+      const response = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // ❌ ไม่ส่ง rememberMe ไปแล้ว
         body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // ✅ เปลี่ยนมาใช้ localStorage อย่างเดียว (จำการล็อกอินไว้เสมอ)
-        const storage = localStorage;
+        // 2. ดึง Token ออกมา (รองรับหลายชื่อที่ Backend อาจส่งมา)
+        const token = data.access_token || data.token || data.accessToken;
 
-        storage.setItem('app_token', data.access_token); 
-        storage.setItem('app_username', data.username);
-        storage.setItem('app_role', data.role);
+        if (token) {
+          // 🚩 3. ถอดรหัส Token เพื่อดึง Role และข้อมูลอื่นๆ
+          const decoded = jwtDecode<JwtPayload>(token);
+          const userRole = (decoded.role || 'user').toLowerCase();
 
-        navigate('/home'); 
+          // 🚩 4. บันทึกข้อมูลลง localStorage ให้ครบถ้วน
+          localStorage.setItem('app_token', token); 
+          localStorage.setItem('app_username', decoded.username);
+          localStorage.setItem('app_role', userRole);
+
+          message.success(`ยินดีต้อนรับคุณ ${decoded.username} (${userRole}) 🐒`);
+          
+          // 5. นำทางไปหน้าหลัก
+          // แนะนำให้ใช้ window.location.href เพื่อให้ทั้งแอปโหลดสถานะใหม่จาก localStorage
+          window.location.href = '/home'; 
+        } else {
+          setError('Backend ไม่ได้ส่ง Token มาให้');
+        }
 
       } else {
-        setError(data.message || 'Login failed');
+        // กรณี Password ผิด หรือไม่พบ User
+        setError(data.message || 'Username หรือ Password ไม่ถูกต้อง');
+        message.error(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
       }
     } catch (err) {
       setError('ไม่สามารถเชื่อมต่อกับ Server ได้');
@@ -52,12 +76,14 @@ export default function LoginForm({ onShowRegister }: LoginFormProps) {
 
   return (
     <div className="login-bg">
-      <div className="trego-modal-box" style={{ maxWidth: '350px', textAlign: 'center' }}>
-        <h1 className="trego-logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>🐒 Monkey Tour</h1>
-        <p style={{ color: '#666', marginBottom: '20px' }}>Welcome back! Please login.</p>
+      <div className="trego-modal-box" style={{ maxWidth: '350px', textAlign: 'center', margin: 'auto', marginTop: '100px' }}>
+        <h1 className="trego-logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
+          🐒 Monkey Tour
+        </h1>
+        <p style={{ color: '#666', marginBottom: '20px' }}>จัดการทัวร์ของคุณได้ง่ายๆ ที่นี่</p>
         
         <form onSubmit={handleSubmit}>
-          <div className="trego-form-group">
+          <div className="trego-form-group" style={{ textAlign: 'left' }}>
             <label className="trego-label">Username</label>
             <input 
               className="trego-input" 
@@ -67,7 +93,7 @@ export default function LoginForm({ onShowRegister }: LoginFormProps) {
               required
             />
           </div>
-          <div className="trego-form-group">
+          <div className="trego-form-group" style={{ textAlign: 'left', marginTop: '15px' }}>
             <label className="trego-label">Password</label>
             <input 
               className="trego-input" 
@@ -79,28 +105,30 @@ export default function LoginForm({ onShowRegister }: LoginFormProps) {
             />
           </div>
 
-          {/* ❌ ลบส่วน Checkbox UI ออกไปแล้ว */}
-
-          {error && <p style={{ color: 'var(--trego-red)', fontSize: '12px' }}>{error}</p>}
+          {error && (
+            <p style={{ color: 'red', fontSize: '13px', marginTop: '10px' }}>
+              ⚠️ {error}
+            </p>
+          )}
           
           <button 
             type="submit" 
             className="trego-btn trego-btn-primary" 
-            style={{ width: '100%', marginTop: '20px' }} // เพิ่ม margin นิดหน่อยให้สวยงาม
+            style={{ width: '100%', marginTop: '20px', padding: '10px' }}
             disabled={loading}
           >
-            {loading ? 'Checking...' : 'Login'}
+            {loading ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
           </button>
         </form>
 
         <div style={{ marginTop: '20px', fontSize: '14px' }}>
-          <span>Don't have an account? </span>
+          <span>ยังไม่มีบัญชี? </span>
           <button 
             type="button" 
             onClick={onShowRegister} 
-            style={{ background: 'none', border: 'none', color: 'var(--trego-blue)', cursor: 'pointer', fontWeight: '700', textDecoration: 'underline' }}
+            style={{ background: 'none', border: 'none', color: '#0f1d45', cursor: 'pointer', fontWeight: '700', textDecoration: 'underline' }}
           >
-            Register
+            สมัครสมาชิกใหม่
           </button>
         </div>
       </div>

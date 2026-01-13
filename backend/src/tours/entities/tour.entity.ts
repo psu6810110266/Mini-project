@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Booking } from '../../bookings/entities/booking.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 
-@Entity('tours')
+@Entity()
 export class Tour {
   @PrimaryGeneratedColumn()
   id: number;
@@ -9,32 +10,33 @@ export class Tour {
   @Column()
   title: string;
 
-  @Column('text')
+  // ✅ แก้: ยอมให้ว่างได้
+  @Column('text', { nullable: true })
   description: string;
+
+  // ✅ แก้: ยอมให้ว่างได้ (ตัวต้นเหตุ Error 500)
+  @Column({ nullable: true })
+  location: string;
+
+  // ✅ แก้: ยอมให้ว่างได้ (เผื่อหน้าบ้านไม่ได้คำนวณส่งมา)
+  @Column({ nullable: true })
+  duration: string;
+
+  @Column({ default: 1 })
+  days: number;
+
+  @Column({ default: 0 })
+  nights: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Column('int')
-  max_seats: number;
-
-  @Column('int', { default: 0 })
-  current_seats: number;
-
-  @Column({ default: true })
-  is_active: boolean;
-
-  @Column('jsonb', { nullable: true })
-  itinerary: any;
-
+  // ✅ แก้: ยอมให้ว่างได้
   @Column({ nullable: true })
-  image_url: string;
+  imageUrl: string;
 
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  @OneToMany(() => Booking, (booking) => booking.tour)
+  bookings: Booking[];
 
   @OneToMany(() => Favorite, (favorite) => favorite.tour)
   favorites: Favorite[];

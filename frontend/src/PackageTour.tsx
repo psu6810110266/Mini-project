@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
+import { useState, useEffect } from 'react';
+import axios from 'axios'; 
+import { message } from 'antd'; 
+import { useNavigate } from 'react-router-dom';
+import Navbar from './components/Navbar'; 
+import Hero from './components/Hero';     
 import TourCard, { type TourPackage } from './components/TourCard'; 
 import AddTourModal from './components/AddTourModal';
-import DeleteModal from './components/Delete'; 
+import DeleteModal from './components/Delete';
 import TourDetails from './components/TourDetails';
-import Settings from './components/Settings';
+import MyBookings from './components/MyBookings';
+import BookingModal from './components/BookingModal';
 import Footer from './components/Footer';
+import Settings from './components/Settings';
 
 export default function PackageTour() {
   const navigate = useNavigate();
 
-  // ✅ แก้ไขตรงนี้: ดึงค่ามา -> แปลงเป็นตัวเล็กทันที -> เช็คว่าเป็น admin หรือไม่
+  // --- เช็ค Role สำหรับแสดงผลปุ่มบนหน้าเว็บ ---
   const rawRole = localStorage.getItem('app_role') || sessionStorage.getItem('app_role') || 'user';
   const userRole = rawRole.toLowerCase() === 'admin' ? 'admin' : 'user';
-
-  // 🛠️ Debug: เปิด Console (F12) ดูว่ามันปริ้นค่าอะไรออกมา
-  console.log("Debug Role:", userRole, "(Original:", rawRole, ")");
 
   const handleLogout = () => {
     localStorage.clear();
@@ -26,23 +26,94 @@ export default function PackageTour() {
     navigate('/login'); 
   };
 
-  // --- 1. Data State ---
-  const [tours, setTours] = useState<any[]>([
-    { id: 1, title: '7 Islands Krabi', duration: '1 Day', days: 1, nights: 0, price: 1500, imageUrl: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80', description: 'Visit the magnificent 7 Islands Krabi.' },
-    { id: 2, title: 'Samui Retreat', duration: '2 Days 2 Nights', days: 2, nights: 2, price: 8500, imageUrl: 'https://paradiseislandestate.com/wp-content/uploads/2024/11/Is-Koh-Samui-Worth-Visiting-1440x812.jpg', description: 'Relaxing on beautiful beaches of Samui.' },
-    { id: 3, title: 'Phi Phi Islands', duration: '2 Days 1 Night', days: 2, nights: 1, price: 5900, imageUrl: 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&w=800&q=80', description: 'Experience the crystal clear waters of Phi Phi.' },
-  ]);
+  // --- Data & State ---
+  const [tours, setTours] = useState<TourPackage[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // --- 2. UI Control States ---
+  // Modal States
   const [isAddOpen, setAddOpen] = useState(false);
   const [isDelOpen, setDelOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
-  const [viewDetailsTour, setViewDetailsTour] = useState<TourPackage | null>(null); 
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]); 
+  const [viewDetailsTour, setViewDetailsTour] = useState<TourPackage | null>(null);
+
+  const [isBookingOpen, setBookingOpen] = useState(false);
+  const [bookingTour, setBookingTour] = useState<TourPackage | null>(null);
   
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]); 
   const [viewMode, setViewMode] = useState<'all' | 'favorites' | 'bookings' | 'settings'>('all');
 
-  // --- 3. Logic Functions ---
+  // --- API Functions ---
+  
+  // 1. ดึงข้อมูลทัวร์ (เป็น Public ไม่ต้องใช้บัตรผ่าน)
+  const fetchTours = async () => {
+    try {
+      const res = await axios.get('http://localhost:3000/tours');
+      setTours(res.data);
+    } catch (error) {
+      console.error('Error fetching tours:', error);
+      message.error('ไม่สามารถดึงข้อมูลทัวร์ได้');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchTours(); }, []);
+
+  // 🚩 2. ฟังก์ชัน บันทึก/แก้ไข (ต้องใช้บัตร Admin)
+  const handleSave = async (tourData: TourPackage) => {
+    // ✨ ดึงบัตรผ่านจากเครื่อง
+    const token = localStorage.getItem('app_token'); 
+    const config = {
+      headers: { Authorization: `Bearer ${token}` } // 🚩 ยื่นบัตรให้ Backend
+    };
+
+    try {
+      if (selectedTour) {
+        // แก้ไขแพ็คเกจเดิม
+        await axios.patch(`http://localhost:3000/tours/${selectedTour.id}`, tourData, config);
+        message.success('✅ แก้ไขแพ็คเกจเรียบร้อย');
+      } else {
+        // เพิ่มแพ็คเกจใหม่
+        await axios.post('http://localhost:3000/tours', tourData, config);
+        message.success('✅ เพิ่มแพ็คเกจใหม่เรียบร้อย');
+      }
+      setAddOpen(false);
+      setSelectedTour(null);
+      fetchTours();
+    } catch (error) {
+      // 🕵️‍♂️ ถ้ายังติด 401 แสดงว่า Token หายหรือคุณไม่ใช่ Admin จริงๆ
+      message.error('❌ คุณไม่มีสิทธิ์จัดการข้อมูล (Admin Only)');
+    }
+  };
+
+  // 🚩 3. ฟังก์ชัน ลบ (ต้องใช้บัตร Admin)
+  const handleDelete = async () => {
+    if (selectedTour) {
+      const token = localStorage.getItem('app_token');
+      try {
+        await axios.delete(`http://localhost:3000/tours/${selectedTour.id}`, {
+          headers: { Authorization: `Bearer ${token}` } // 🚩 ยื่นบัตรให้ Backend
+        });
+        message.success('🗑️ ลบแพ็คเกจเรียบร้อย');
+        setDelOpen(false);
+        setSelectedTour(null);
+        fetchTours();
+      } catch (error) {
+        message.error('❌ ลบไม่สำเร็จ (คุณอาจไม่มีสิทธิ์ หรือมีข้อมูลจองค้างอยู่)');
+      }
+    }
+  };
+
+  // --- ส่วนอื่นๆ ของ Component ---
+  const handleOpenBooking = (tour: TourPackage) => {
+    const token = localStorage.getItem('app_token'); 
+    if (!token || token === 'undefined') {
+       message.warning('กรุณาเข้าสู่ระบบก่อนจองนะครับ 🔒');
+       return;
+    }
+    setBookingTour(tour);
+    setBookingOpen(true);
+  };
 
   const toggleFavorite = (id: number) => {
     if (favoriteIds.includes(id)) {
@@ -52,36 +123,6 @@ export default function PackageTour() {
     }
   };
 
-  const handleSave = (tourData: any) => {
-    let processedData = { ...tourData };
-    if (processedData.days !== undefined && processedData.nights !== undefined) {
-      const d = Number(processedData.days);
-      const n = Number(processedData.nights);
-      const dayText = d > 0 ? `${d} Day${d > 1 ? 's' : ''}` : '';
-      const nightText = n > 0 ? `${n} Night${n > 1 ? 's' : ''}` : '';
-      processedData.duration = `${dayText} ${nightText}`.trim() || '1 Day';
-    }
-
-    if (selectedTour) {
-      setTours(tours.map(t => t.id === selectedTour.id ? { ...processedData, id: t.id } : t));
-    } else {
-      const newId = Math.max(...tours.map(t => t.id), 0) + 1;
-      setTours([...tours, { ...processedData, id: newId }]);
-    }
-    setAddOpen(false);
-    setSelectedTour(null);
-  };
-
-  const handleDelete = () => {
-    if (selectedTour) {
-      setTours(tours.filter(t => t.id !== selectedTour.id));
-      setFavoriteIds(prev => prev.filter(id => id !== selectedTour.id));
-      setDelOpen(false);
-      setSelectedTour(null);
-    }
-  };
-
-  // --- 4. Filtering Logic ---
   const displayedTours = viewMode === 'favorites' 
     ? tours.filter(tour => favoriteIds.includes(tour.id))
     : tours;
@@ -91,137 +132,73 @@ export default function PackageTour() {
       <Navbar 
         userRole={userRole} 
         onLogout={handleLogout} 
-        onOpenBookings={() => setViewMode('bookings')}
+        onOpenBookings={() => setViewMode('bookings')} 
         onGoHome={() => setViewMode('all')} 
         onOpenSettings={() => setViewMode('settings')}
       />
 
-      {/* Hero แสดงเฉพาะหน้าแรก (all) */}
       {viewMode === 'all' && <Hero />}
 
       <div className="trego-container" style={{ padding: '40px 20px', minHeight: '60vh' }}>
         
-        {/* --- Header Section (ซ่อนถ้าเป็นหน้า Settings) --- */}
-        {viewMode !== 'settings' && (
+        {/* Admin Header */}
+        {viewMode !== 'settings' && viewMode !== 'bookings' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
-            
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>
-                {viewMode === 'all' && 'Monkey Packages'}
+                {viewMode === 'all' && 'Popular Packages'}
                 {viewMode === 'favorites' && 'My Favorites'}
-                {viewMode === 'bookings' && 'My Bookings'}
               </h2>
-
-              {viewMode !== 'bookings' && (
-                <div style={{ background: '#f3f4f6', padding: '5px', borderRadius: '10px', display: 'flex' }}>
-                  <button 
-                    onClick={() => setViewMode('all')}
-                    style={{ 
-                      border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
-                      background: viewMode === 'all' ? 'white' : 'transparent',
-                      color: viewMode === 'all' ? '#0f1d45' : '#666',
-                      boxShadow: viewMode === 'all' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none'
-                    }}
-                  >
-                    All Tours
-                  </button>
-                  <button 
-                    onClick={() => setViewMode('favorites')}
-                    style={{ 
-                      border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
-                      background: viewMode === 'favorites' ? 'white' : 'transparent',
-                      color: viewMode === 'favorites' ? '#ef4444' : '#666',
-                      boxShadow: viewMode === 'favorites' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none'
-                    }}
-                  >
-                    Favorites ({favoriteIds.length})
-                  </button>
-                </div>
-              )}
             </div>
-
-            {/* ✅ ใช้ userRole ที่แปลงเป็นตัวเล็กแล้วเช็คเงื่อนไข */}
-            {userRole === 'admin' && viewMode !== 'bookings' && (
-              <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>
-                + Add Package
-              </button>
-            )}
-
-            {viewMode === 'bookings' && (
-               <button onClick={() => setViewMode('all')} className="trego-btn" style={{border: '1px solid #ddd'}}>
-                 ← Back to Tours
-               </button>
+            {userRole === 'admin' && (
+              <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>+ Add Package</button>
             )}
           </div>
         )}
 
-        {/* --- Content Body --- */}
-        
+        {/* Content Views */}
         {viewMode === 'bookings' ? (
-          // 🟡 VIEW: Bookings
-          <div style={{ textAlign: 'center', padding: '80px', background: 'white', borderRadius: '20px', border: '1px dashed #cbd5e1' }}>
-            <div style={{ fontSize: '60px', marginBottom: '20px' }}>✈️</div>
-            <h3 style={{ color: '#0f1d45' }}>Your itinerary is empty</h3>
-            <p style={{ color: '#666' }}>Looks like you haven't booked any trips yet.</p>
-            <button onClick={() => setViewMode('all')} className="trego-btn trego-btn-primary" style={{ marginTop: '20px' }}>
-              Explore Packages
-            </button>
+          <div>
+             <button onClick={() => setViewMode('all')} className="trego-btn" style={{ marginBottom: '20px', border: '1px solid #ddd' }}>← Back to Tours</button>
+             <MyBookings />
           </div>
-
         ) : viewMode === 'settings' ? (
-        <Settings onBack={() => setViewMode('all')} />  // 👈 ส่งฟังก์ชันกลับหน้าหลักตรงนี้
+           <Settings onBack={() => setViewMode('all')} />
         ) : (
-          // 🔵 VIEW: All Tours / Favorites
-          <>
-            {displayedTours.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
-                {displayedTours.map(tour => (
-                  <TourCard 
-                    key={tour.id} 
-                    tour={tour}
-                    isFavorite={favoriteIds.includes(tour.id)}
-                    onToggleFavorite={() => toggleFavorite(tour.id)}
-                    onDetails={() => setViewDetailsTour(tour)} 
-                    // ✅ ส่ง Action เฉพาะ Admin
-                    onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
-                    onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
-                  />
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '50px', color: '#888' }}>
-                <h3>No tours found in this list</h3>
-                {viewMode === 'favorites' && (
-                  <button onClick={() => setViewMode('all')} className="trego-btn" style={{marginTop: '10px'}}>
-                    Go find some tours
-                  </button>
-                )}
-              </div>
-            )}
-          </>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+            {displayedTours.map(tour => (
+              <TourCard 
+                key={tour.id} 
+                tour={tour}
+                isFavorite={favoriteIds.includes(tour.id)}
+                onToggleFavorite={() => toggleFavorite(tour.id)}
+                onDetails={() => setViewDetailsTour(tour)}
+                onBook={() => handleOpenBooking(tour)} 
+                onEdit={userRole === 'admin' ? () => { setSelectedTour(tour); setAddOpen(true); } : undefined} 
+                onDelete={userRole === 'admin' ? () => { setSelectedTour(tour); setDelOpen(true); } : undefined} 
+              />
+            ))}
+          </div>
         )}
-
       </div>
 
-      {/* --- Modals & Popups --- */}
-      <AddTourModal 
-        isOpen={isAddOpen} 
-        onClose={() => setAddOpen(false)} 
-        onSave={handleSave} 
-        initialData={selectedTour} 
-      />
-      <DeleteModal 
-        isOpen={isDelOpen} 
-        onConfirm={handleDelete} 
-        onCancel={() => setDelOpen(false)} 
-      />
-      {viewDetailsTour && (
-        <TourDetails 
-          tour={viewDetailsTour} 
-          onClose={() => setViewDetailsTour(null)} 
+      {/* --- Modals --- */}
+      <AddTourModal isOpen={isAddOpen} onClose={() => setAddOpen(false)} onSave={handleSave} initialData={selectedTour} />
+      <DeleteModal isOpen={isDelOpen} onConfirm={handleDelete} onCancel={() => setDelOpen(false)} />
+      
+      {viewDetailsTour && <TourDetails tour={viewDetailsTour} onClose={() => setViewDetailsTour(null)} />}
+
+      {bookingTour && (
+        <BookingModal 
+           visible={isBookingOpen} 
+           onClose={() => { setBookingOpen(false); setBookingTour(null); }} 
+           tourId={bookingTour.id}
+           tourName={bookingTour.title}
+           price={bookingTour.price} 
         />
       )}
-      <Footer/>
+
+      <Footer />
     </div>
   );
 }

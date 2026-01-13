@@ -24,9 +24,13 @@ export class AuthService {
 
   // 2. สร้าง Token (JWT)
   async login(user: any) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload), // สร้าง String ยาวๆ ที่ระบุตัวตน
-    };
-  }
+  const payload = { 
+    username: user.username, 
+    sub: user.id, 
+    role: user.role // 🚩 ใส่ Role ลงใน Payload
+  };
+  return {
+    access_token: this.jwtService.sign(payload),
+  };
+}
 }

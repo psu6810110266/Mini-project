@@ -1,40 +1,36 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn,Unique } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Tour } from '../../tours/entities/tour.entity';
 
-export enum BookingStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-}
-
-@Entity('bookings')
+@Entity()
+@Unique(['user', 'tour', 'startDate']) // 🚩 ห้าม User คนเดิม จองทัวร์เดิม ในวันเริ่มเดินทางวันเดิมซ้ำ
 export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'date' })
+  startDate: string;
+
+  @Column({ type: 'date' })
+  endDate: string;
+
   @Column()
-  booked_seats: number;
+  bookedSeats: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
-  total_price: number;
+  totalPrice: number;
 
-  @Column({
-    type: 'enum',
-    enum: BookingStatus,
-    default: BookingStatus.PENDING,
-  })
-  status: BookingStatus;
+  @Column({ default: 'pending' }) // pending, confirmed, cancelled
+  status: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
-  // --- จุดสำคัญที่แก้ Error ---
-  @ManyToOne(() => User, (user) => user.bookings)
-  @JoinColumn({ name: 'user_id' })
-  user: User; // ตัวแปรนี้แหละครับที่ User Entity มองหาอยู่
+  // เชื่อมกับ User (Many-to-One)
+  @ManyToOne(() => User, (user) => user.bookings, { onDelete: 'CASCADE' })
+  user: User;
 
-  @ManyToOne(() => Tour)
-  @JoinColumn({ name: 'tour_id' })
+  // เชื่อมกับ Tour (Many-to-One)
+  @ManyToOne(() => Tour, (tour) => tour.bookings, { onDelete: 'CASCADE' })
   tour: Tour;
 }
