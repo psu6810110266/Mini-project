@@ -10,7 +10,7 @@ import { ToursModule } from './tours/tours.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { AuthModule } from './auth/auth.module';
 import { FavoritesModule } from './favorites/favorites.module'; // ✨ 1. Import Module เข้ามา
-
+import { DashboardModule } from './dashboard/dashboard.module';
 // Import Entities
 import { User } from './users/entities/user.entity';
 import { Tour } from './tours/entities/tour.entity';
@@ -48,7 +48,8 @@ import { Favorite } from './favorites/entities/favorite.entity'; // ✨ 2. Impor
     ToursModule,
     BookingsModule,
     AuthModule,
-    FavoritesModule, // ✨ 4. ใส่ Module ลงในถังรวม
+    FavoritesModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

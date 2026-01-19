@@ -12,12 +12,13 @@ import MyBookings from './components/MyBookings';
 import BookingModal from './components/BookingModal';
 import Footer from './components/Footer';
 import Settings from './components/Settings';
+import AdminDashboard from './components/AdminDashboard'; // 🚩 1. เพิ่ม Import Dashboard
 
 export default function PackageTour() {
   const navigate = useNavigate();
 
   // --- 1. จัดการ Token และ Role ---
-  const token = localStorage.getItem('app_token'); //
+  const token = localStorage.getItem('app_token'); 
   const rawRole = localStorage.getItem('app_role') || 'user';
   const userRole = rawRole.toLowerCase() === 'admin' ? 'admin' : 'user';
 
@@ -31,7 +32,7 @@ export default function PackageTour() {
   const [tours, setTours] = useState<TourPackage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚩 แก้ไขจุดที่ 1: ดึง Favorite จากเครื่องทันทีที่โหลดหน้า (กันหายตอนรีเฟรช/เข้าใหม่)
+  // ดึง Favorite จากเครื่องทันทีที่โหลดหน้า
   const [favoriteIds, setFavoriteIds] = useState<number[]>(() => {
     const saved = localStorage.getItem('app_favorites');
     try {
@@ -41,7 +42,9 @@ export default function PackageTour() {
     }
   });
 
-  const [viewMode, setViewMode] = useState<'all' | 'favorites' | 'bookings' | 'settings'>('all');
+  // 🚩 2. เพิ่ม Type 'dashboard' เข้าไปใน viewMode
+  const [viewMode, setViewMode] = useState<'all' | 'favorites' | 'bookings' | 'settings' | 'dashboard'>('all');
+  
   const [isAddOpen, setAddOpen] = useState(false);
   const [isDelOpen, setDelOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<TourPackage | null>(null);
@@ -50,8 +53,6 @@ export default function PackageTour() {
   const [bookingTour, setBookingTour] = useState<TourPackage | null>(null);
 
   // --- 3. API Functions ---
-
-  // ดึงข้อมูลทัวร์ทั้งหมด
   const fetchTours = async () => {
     try {
       const res = await axios.get('http://localhost:3000/tours');
@@ -65,20 +66,15 @@ export default function PackageTour() {
     }
   };
 
-  // 🚩 แก้ไขจุดที่ 2: ดึง Favorite จาก Backend และเช็ค Error .map
   const fetchFavorites = async () => {
     if (!token || token === 'undefined') return;
-
     try {
       const res = await axios.get('http://localhost:3000/favorites', {
-        headers: { Authorization: `Bearer ${token}` } //
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      // ✅ เช็คว่าเป็น Array จริงๆ ถึงจะใช้ .map
       if (Array.isArray(res.data)) {
         const ids = res.data.map((fav: any) => typeof fav === 'number' ? fav : fav.tourId || fav.id);
-        
-        // ถ้า Backend มีข้อมูล ให้ใช้ตาม Backend และเซฟลงเครื่อง
         if (ids.length > 0) {
           setFavoriteIds(ids);
           localStorage.setItem('app_favorites', JSON.stringify(ids));
@@ -86,7 +82,6 @@ export default function PackageTour() {
       }
     } catch (error) {
       console.error('Fetch Favorites Error:', error);
-      // ถ้า Error (เช่น 401) ไม่ต้องทำอะไร ปล่อยให้ใช้ค่าจาก LocalStorage ไปก่อน
     }
   };
 
@@ -95,7 +90,6 @@ export default function PackageTour() {
     fetchFavorites();
   }, []);
 
-  // 🚩 แก้ไขจุดที่ 3: Toggle Favorite (บันทึกลงฐานข้อมูลและเครื่องพร้อมกัน)
   const toggleFavorite = async (id: number) => {
     if (!token) {
       message.warning('กรุณาเข้าสู่ระบบก่อนนะครับ 🔒');
@@ -103,23 +97,20 @@ export default function PackageTour() {
     }
 
     try {
-      // ยิง Backend ทันที
       await axios.post('http://localhost:3000/favorites', { tourId: id }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // อัปเดต State และ LocalStorage ทันที
       setFavoriteIds(prev => {
         const newIds = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
         localStorage.setItem('app_favorites', JSON.stringify(newIds));
         return newIds;
       });
     } catch (error) {
-      message.error('ไม่สามารถบันทึกรายการโปรดลงฐานข้อมูลได้');
+      message.error('ไม่สามารถบันทึกรายการโปรดได้');
     }
   };
 
-  // --- Handlers อื่นๆ ---
   const handleSave = async (tourData: TourPackage) => {
     const config = { headers: { Authorization: `Bearer ${token}` } };
     try {
@@ -171,7 +162,8 @@ export default function PackageTour() {
       {viewMode === 'all' && <Hero />}
 
       <div className="trego-container" style={{ padding: '40px 20px', minHeight: '60vh' }}>
-        {viewMode !== 'settings' && viewMode !== 'bookings' && (
+        {/* ส่วน Header และปุ่มกดเปลี่ยนหน้า */}
+        {viewMode !== 'settings' && viewMode !== 'bookings' && viewMode !== 'dashboard' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <h2 style={{ fontSize: '32px', color: '#0f1d45', margin: 0 }}>
@@ -182,13 +174,35 @@ export default function PackageTour() {
                 <button onClick={() => setViewMode('favorites')} style={{ border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', background: viewMode === 'favorites' ? 'white' : 'transparent', color: viewMode === 'favorites' ? '#ef4444' : '#666' }}>Favorites ({favoriteIds.length})</button>
               </div>
             </div>
+
+            {/* 🚩 3. ปุ่มสำหรับ Admin (Add Package & Dashboard) */}
             {userRole === 'admin' && (
-              <button className="trego-btn trego-btn-primary" onClick={() => { setSelectedTour(null); setAddOpen(true); }}>+ Add Package</button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={() => setViewMode('dashboard')}
+                  className="trego-btn"
+                  style={{ background: '#6366f1', color: 'white', border: 'none' }}
+                >
+                  📊 Dashboard
+                </button>
+                <button 
+                  className="trego-btn trego-btn-primary" 
+                  onClick={() => { setSelectedTour(null); setAddOpen(true); }}
+                >
+                  + Add Package
+                </button>
+              </div>
             )}
           </div>
         )}
 
-        {viewMode === 'bookings' ? (
+        {/* 🚩 4. ส่วน Render เนื้อหาตาม viewMode */}
+        {viewMode === 'dashboard' ? (
+          <div>
+             <button onClick={() => setViewMode('all')} className="trego-btn" style={{ marginBottom: '20px', border: '1px solid #ddd' }}>← Back to Tours</button>
+             <AdminDashboard />
+          </div>
+        ) : viewMode === 'bookings' ? (
           <div>
             <button onClick={() => setViewMode('all')} className="trego-btn" style={{ marginBottom: '20px', border: '1px solid #ddd' }}>← Back to Tours</button>
             <MyBookings />
